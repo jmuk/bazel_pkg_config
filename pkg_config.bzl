@@ -7,7 +7,11 @@ def _error(message):
 def _split(result, delimeter = " "):
     if result.error != None:
         return result
-    return _success([arg for arg in result.value.strip().split(delimeter) if arg])
+    m = {}
+    for arg in result.value.strip().split(delimeter):
+      if arg:
+        m[arg] = True
+    return _success(m.keys())
 
 def _find_binary(ctx, binary_name):
     binary = ctx.which(binary_name)
@@ -91,8 +95,13 @@ def _symlinks(ctx, basename, srcpaths):
     root = ctx.path("")
     base = root.get_child(basename)
     rootlen = len(str(base)) - len(basename)
+    bases = {}
     for src in [ctx.path(p) for p in srcpaths]:
-        dest = base.get_child(src.basename)
+        basename = src.basename
+        if basename in bases:
+          basename = basename + "{}".format(len(bases))
+        bases[basename] = True
+        dest = base.get_child(basename)
         ctx.symlink(src, dest)
         result += [str(dest)[rootlen:]]
     return result
